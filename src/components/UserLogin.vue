@@ -1,10 +1,5 @@
 <template>
-    <div class="login-container" :style="{
-        backgroundImage: `url(${require('/assets/jinhao_login.jpg')})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        height: '100vh'
-    }">
+    <div class="login-container">
         <form @submit.prevent="handleLogin" class="login-form">
             <h2>Login</h2>
             <div class="form-group">
@@ -13,7 +8,7 @@
             </div>
             <button type="submit">Login</button>
             <div class="links">
-                <router-link to="/signup">no account? sign up</router-link>
+                <router-link to="/userSignup">no account? sign up</router-link>
             </div>
         </form>
     </div>
