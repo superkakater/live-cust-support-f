@@ -41,7 +41,7 @@ export default {
                     localStorage.setItem('userRole', 'STAFF');
 
                     alert("successfully login");
-                    this.$router.push('/staffdash/info');
+                    this.$router.push('/staffdash/table');
                 }
             } catch (error) {
                 alert('login failed, please check staffName enter');

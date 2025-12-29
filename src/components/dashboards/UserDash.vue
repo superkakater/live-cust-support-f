@@ -112,15 +112,25 @@ export default {
         logout() {
             localStorage.clear();
             this.$router.push('/');
-            this.$message.success('已退出登录')
+            this.$message.success('already logged out')
         },
         toggleService() {
-            this.humanOpen = !this.humanOpen;   // ✅ correct
-            if (this.humanOpen) this.initHumanService();
+            this.humanOpen = !this.humanOpen;
+            if (this.humanOpen) {
+                this.$nextTick(() => {
+                    this.initHumanService();
+                });
+            }
         },
 
         closeService() {
             this.humanOpen = false;
+            this.humanOpen = false;
+
+            if (this.humanSub) {
+                this.humanSub.unsubscribe();
+                this.humanSub = null;
+            }
 
             if (stompClient && stompClient.connected) {
                 stompClient.disconnect(() => {
@@ -145,7 +155,7 @@ export default {
                 const response = await axios.get("http://localhost:8088/chat/userId/getConversationId", {
                     params: { userId: this.userInfo.userId }
                 });
-                this.currentConversationId = response.data;
+                this.conversationId = response.data;
             } catch (error) {
                 console.error("Error in starting conversation:", error);
             }
@@ -167,15 +177,19 @@ export default {
             stompClient.connect({}, async () => {
                 this.connectionActive = true;
 
-                await this.startConversation();     // ✅ await so conversationId is ready
 
-                axios.post("http://localhost:8088/chat/userid/close/conversation", this.userInfo.userId, {
+
+                await axios.post("http://localhost:8088/chat/userid/close/conversation", this.userInfo.userId, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 });
 
-                stompClient.subscribe(`/cust_service/${this.userInfo.userId}/private`, (message) => {
+                await this.startConversation();
+
+                this.humanSub = stompClient.subscribe(`/cust_service/${this.userInfo.userId}/private`, (message) => {
+                    if (!this.humanOpen) return; // dialog closed => no ref
+
                     const msg = JSON.parse(message.body);
                     this.humanMessages.push({
                         sender: 'server',
@@ -184,6 +198,7 @@ export default {
                     });
                     this.scrollToBottom('human');
                 });
+
 
                 this.humanMessages.push({
                     sender: 'server',
@@ -242,7 +257,7 @@ export default {
             }
             axios.get("http://localhost:8088/chat/get/conversationStatus", {
                 params: {
-                    conversationId: this.currentConversationId
+                    conversationId: this.conversationId
                 }
             }).then((response) => {
                 const status = response.data;
@@ -278,14 +293,14 @@ export default {
                         receiverId: Number(this.userInfo.custId),
                         content: msg,
                         sendDate: new Date(),
-                        conversationId: this.currentConversationId
+                        conversationId: this.conversationId
                     }
 
                     axios.post("http://localhost:8088/chat/insert/newMessages", {
                         senderId: Number(this.userInfo.userId),
                         receiverId: Number(this.userInfo.custId),
                         content: msg,
-                        conversationId: this.currentConversationId
+                        conversationId: this.conversationId
                     });
 
                     stompClient.send("/app/sendMsg", {}, JSON.stringify(thisMessage));
@@ -299,11 +314,18 @@ export default {
 
         scrollToBottom(type) {
             this.$nextTick(() => {
-                const ref = type === 'ai' ? 'aiChatContent' : 'humanChatContent'
-                const container = this.$refs[ref]
-                container.scrollTop = container.scrollHeight
-            })
+                const refName = type === 'ai' ? 'aiChatContent' : 'humanChatContent';
+                const el = this.$refs[refName];
+
+                // ref can be null if v-if is false or component unmounted
+                if (!el) return;
+
+                el.scrollTop = el.scrollHeight;
+            });
         },
+
+
+
 
 
         formatTime(time) {

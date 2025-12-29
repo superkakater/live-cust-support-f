@@ -40,7 +40,7 @@ const routes = [
         path: '/staffdash',
         component: StaffLayout,
         children: [
-            { path: 'info', component: StaffDash },
+            { path: 'table', component: StaffDash },
             { path: 'chat', component: StaffChatPage },
             { path: 'history', component: ConversationList },
         ]
