@@ -6,6 +6,8 @@ Vue 3 frontend for a **live customer support** platform. It supports **two roles
 
 ---
 
+> **Note**: This repository is a minimal demo/template primarily to showcase the WebSocket live 1:1 chat (STOMP/SockJS) flow. It includes basic login/signup for completeness, but authentication/authorization is intentionally simplified and not production-ready—any real/monetized deployment should implement proper security hardening (validation, password hashing, roles/permissions, rate limits, etc.).
+
 ## Tech Stack
 
 - Vue 3
